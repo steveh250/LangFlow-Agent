@@ -1,0 +1,93 @@
+from flask import Flask, request, jsonify
+import subprocess
+import validators
+import logging
+import os
+import datetime
+from urllib.parse import urlparse
+from pathlib import Path
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+app = Flask(__name__)
+app.debug = True
+
+@app.before_request
+def log_request():
+    app.logger.debug(f"Request Headers: {dict(request.headers)}")
+    app.logger.debug(f"Request Body: {request.get_data(as_text=True)}")
+
+@app.after_request
+def log_response(response):
+    app.logger.debug(f"Response Status: {response.status}")
+    app.logger.debug(f"Response Data: {response.get_data(as_text=True)}")
+    return response
+
+def validate_url(url: str):
+    """Validate the provided URL."""
+    if not url:
+        return False, "URL is missing."
+    if not validators.url(url):
+        return False, "Invalid URL format."
+    return True, ""
+
+def create_output_folder(url: str) -> str:
+    """Generate a unique folder name based on the URL and timestamp."""
+    parsed_url = urlparse(url)
+    domain = parsed_url.netloc.replace('.', '')
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    folder_path = Path.home() / f"SF_Local/{domain}_{timestamp}"
+    folder_path.mkdir(parents=True, exist_ok=True)
+    return str(folder_path)
+
+def run_screaming_frog(url: str, output_folder: str):
+    """Execute the Screaming Frog crawl."""
+    command = [
+        'screamingfrogseospider',
+        '--crawl', url,
+        '--headless',
+        '--export-tabs', 'images:all',
+        '--output-folder', output_folder,
+        '--export-format', 'csv',
+    ]
+    try:
+        app.logger.info(f"Running command: {' '.join(command)}")
+        subprocess.run(command, check=True, capture_output=True, text=True)
+        return True, "Crawl completed successfully."
+    except subprocess.CalledProcessError as e:
+        return False, f"Error: {e.stderr}"
+    except Exception as e:
+        return False, f"Unexpected error: {str(e)}"
+
+@app.route('/crawl', methods=['POST'])
+def crawl():
+    """Handle crawling requests."""
+    try:
+        data = request.get_json()
+        if not data or 'url' not in data:
+            return jsonify(success=False, error="URL not provided."), 400
+
+        url = data['url']
+        is_valid, error_message = validate_url(url)
+        if not is_valid:
+            return jsonify(success=False, error=error_message), 400
+
+        # Generate output folder and run the Screaming Frog crawl
+        output_folder = create_output_folder(url)
+        success, message = run_screaming_frog(url, output_folder)
+
+        return jsonify({
+            'success': success,
+            'message': message,
+            'file_location': output_folder if success else None
+        }), 200 if success else 500
+    except Exception as e:
+        app.logger.error(f"Internal server error: {str(e)}")
+        return jsonify(success=False, error="Internal server error."), 500
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=8090, debug=True)
