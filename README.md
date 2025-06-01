@@ -9,6 +9,7 @@ This repo contains some custom tools and a corrected API call tool to fix some b
  - **LangFlow-Agent-Canvas.png** - LangFlow Agent canvas (see below)
  - **SEOAgent-Video.mp4** - Video of the Agent in action (see bleow)
  - **SEO Agent - Conceptual-Logical.png** - Logical and Conceptual design of Agent (see below)
+ - **LangFlow-Flask-Wrapper** - Flask wrapper for the binary that will be called by the Agent via the API Tool.
 
 
 https://github.com/user-attachments/assets/d2baccc0-a526-4aeb-aa5e-d9680b5c9985
