@@ -12,3 +12,11 @@ This repo contains some custom tools and a corrected API call tool to fix some b
 
 https://github.com/user-attachments/assets/d2baccc0-a526-4aeb-aa5e-d9680b5c9985
 
+ - Logical and Conceptual Model of the Agent
+
+<img width="1076" alt="SEO Agent - Conceptual-Logical" src="https://github.com/user-attachments/assets/d6715517-f7f1-4c66-b3b6-53f72c590004" />
+
+ - LangFlow  Agent canvas screenshot
+
+
+![LangFlow-Agent-Canvas](https://github.com/user-attachments/assets/25ff23f5-1c8e-4d95-bfcf-5afb20e17cce)
